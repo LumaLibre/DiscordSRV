@@ -52,17 +52,21 @@ public class PlayerUtil {
     public static List<Player> getOnlinePlayers(boolean filterVanishedPlayers) {
         List<Player> onlinePlayers = new ArrayList<>();
 
-        try {
-            Method onlinePlayerMethod = Server.class.getMethod("getOnlinePlayers");
-            if (onlinePlayerMethod.getReturnType().equals(Collection.class)) {
-                for (Object o : ((Collection<?>) onlinePlayerMethod.invoke(Bukkit.getServer()))) {
-                    onlinePlayers.add((Player) o);
+        if (SchedulerUtil.isFolia()) {
+            onlinePlayers.addAll(Bukkit.getOnlinePlayers());
+        } else {
+            try {
+                Method onlinePlayerMethod = Server.class.getMethod("getOnlinePlayers");
+                if (onlinePlayerMethod.getReturnType().equals(Collection.class)) {
+                    for (Object o : ((Collection<?>) onlinePlayerMethod.invoke(Bukkit.getServer()))) {
+                        onlinePlayers.add((Player) o);
+                    }
+                } else {
+                    Collections.addAll(onlinePlayers, ((Player[]) onlinePlayerMethod.invoke(Bukkit.getServer())));
                 }
-            } else {
-                Collections.addAll(onlinePlayers, ((Player[]) onlinePlayerMethod.invoke(Bukkit.getServer())));
+            } catch (Exception e) {
+                DiscordSRV.error(e);
             }
-        } catch (Exception e) {
-            DiscordSRV.error(e);
         }
 
         if (!filterVanishedPlayers) {
